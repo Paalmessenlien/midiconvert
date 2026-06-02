@@ -1,0 +1,13 @@
+# Local toolchain installed by setup.sh (platform-specific, large)
+tools/
+.venv/
+
+# Generated artifacts
+out/
+
+# Inputs you may not want to commit
+*.pdf
+
+# Python
+__pycache__/
+*.pyc
