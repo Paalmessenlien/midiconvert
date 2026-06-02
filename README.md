@@ -50,23 +50,67 @@ cd midiconvert
 3. download the Audiveris `.deb` and **extract** it (no install) into
    `tools/audiveris-root/` (its bundled JRE makes it self-contained).
 
-### macOS
+### macOS (Apple Silicon or Intel) — step by step
 
-`setup.sh` handles the Python venv and OCR data; install Audiveris manually:
+On macOS `setup.sh` sets up the Python venv and OCR data automatically; Audiveris
+is installed once from its official `.dmg`. Full walkthrough:
 
-1. Check your chip: `uname -m` → `arm64` (Apple Silicon) or `x86_64` (Intel).
+**1. Prerequisites** — you need `git`, `python3`, and `curl`. The quickest way to
+get `git`/`python3` is the Xcode Command Line Tools (or Homebrew):
+
+```bash
+xcode-select --install          # provides git + python3 (or: brew install git python)
+python3 --version               # confirm Python 3.9+
+```
+
+**2. Get the project and run setup:**
+
+```bash
+git clone https://github.com/Paalmessenlien/midiconvert.git
+cd midiconvert
+./setup.sh                       # creates .venv/, installs deps, downloads OCR data
+```
+
+**3. Install Audiveris** (the OMR engine — it bundles its own Java, so you don't
+install Java separately):
+
+1. Check your chip: `uname -m` → `arm64` (Apple Silicon, M-series) or `x86_64` (Intel).
 2. Download the matching `.dmg` from the
    [Audiveris releases](https://github.com/Audiveris/audiveris/releases)
-   (`…macosx-arm64.dmg` / `…macosx-x86_64.dmg`) and drag **Audiveris** to
-   `/Applications`.
-3. Clear the Gatekeeper quarantine flag once:
+   (`…macosx-arm64.dmg` for Apple Silicon, `…macosx-x86_64.dmg` for Intel), open it,
+   and drag **Audiveris** into `/Applications`.
+3. Clear the Gatekeeper quarantine flag once (the build isn't notarized):
    ```bash
    xattr -dr com.apple.quarantine /Applications/Audiveris.app
    ```
-4. Run `./setup.sh` for the venv + OCR data.
 
-`pdf2midi.sh` auto-detects the launcher at
-`/Applications/Audiveris.app/Contents/MacOS/Audiveris`.
+`pdf2midi.sh` and the web UI auto-detect the launcher at
+`/Applications/Audiveris.app/Contents/MacOS/Audiveris` (no extra config). If you
+put it elsewhere, point at it with `AUDIVERIS=/path/to/Audiveris`.
+
+**4. Run it** — exactly the same commands as Linux:
+
+```bash
+# A) one-shot CLI: PDF -> MIDI (writes to out/)
+./pdf2midi.sh "path/to/your-score.pdf"
+
+# B) web UI: open http://127.0.0.1:5000 in your browser
+.venv/bin/python app.py
+```
+
+**5. Play the result on macOS:**
+- Easiest: double-click `out/<name>.mid` (opens in **GarageBand**), or open it in
+  **MuseScore**.
+- In the web UI it plays in-page (piano-roll + live note read-out); the first play
+  downloads a soundfont, so it needs internet that once.
+- Or with fluidsynth + CoreAudio:
+  ```bash
+  brew install fluid-synth
+  fluidsynth -a coreaudio /path/to/FluidR3_GM.sf2 out/<name>.mid
+  ```
+
+> Tip: if you also have MuseScore installed, you already have a soundfont at
+> `MuseScore_General.sf3` inside its app bundle that fluidsynth can use.
 
 ### Manual / other platforms
 
