@@ -176,21 +176,32 @@ Examples:
 
 ## Web UI
 
-A small Flask app gives you a browser interface: drag in a PDF, watch OMR
-progress, then play the result in-page (with a scrolling piano-roll) and download
-the `.mid` / `.mxl`.
+A small Flask app gives you a browser interface for **both directions**: drop a
+**sheet-music PDF** *or* an **audio file** (MP3/WAV/FLAC/…), watch progress, then
+play the result in-page (scrolling piano-roll + live note read-out) and download
+the artifacts.
 
 ```bash
-./setup.sh                       # installs flask too (in requirements.txt)
-.venv/bin/python app.py          # serves on http://127.0.0.1:5000
+./setup.sh                            # installs flask (in requirements.txt)
+.venv/bin/pip install --no-deps basic-pitch        # for audio input (optional)
+.venv/bin/pip install -r requirements-audio.txt    #   "
+.venv/bin/python app.py               # serves on http://127.0.0.1:5000
 ```
 
-Open <http://127.0.0.1:5000>, drop a PDF, and convert. An "Advanced options" panel
-exposes the same `convert.py` knobs (voice/piano GM program, tempo-fix, forced
-eighth-note BPM, and **Repair right-hand eighth-rests**). During playback a live
-read-out shows the note names currently sounding, alongside the piano-roll.
+Open <http://127.0.0.1:5000> and drop a file:
+- **PDF** → Audiveris OMR → MIDI. "Advanced options" exposes the `convert.py` knobs
+  (voice/piano GM program, tempo-fix, **Repair right-hand eighth-rests**, forced
+  eighth-note BPM). Downloads: MIDI + MusicXML.
+- **Audio** → basic-pitch transcription. "Advanced options" exposes onset/frame
+  sensitivity and the melody pitch range. The result has a **Melody / Full** toggle
+  on the player; downloads: melody MIDI, full MIDI, and the notes CSV.
+
+The app auto-detects the file type and routes accordingly (`pipeline.run_pipeline`
+for PDF, `audio2midi.transcribe` for audio).
 
 Notes:
+- **Audio input is optional** — if `basic-pitch` isn't installed the PDF path still
+  works; audio uploads just error until you install the audio extras.
 - **Local single-user tool** — no auth or upload hardening. It binds to
   `127.0.0.1` by default; only change the host in `app.py` deliberately.
 - In-browser playback uses the [`html-midi-player`](https://github.com/cifkao/html-midi-player)
@@ -198,12 +209,49 @@ Notes:
   internet**. (That CDN `<script>` is a jsdelivr `combine` bundle, which is why it
   carries no Subresource-Integrity hash; fine for a local tool, but pin/host it
   yourself if you deploy this.)
-- OMR is the slow part (~1–2 min); the page polls a job-status endpoint and shows
-  a real progress bar driven by Audiveris' recognition steps.
+- OMR is the slow part (~1–2 min); audio transcription takes ~30 s. The page polls a
+  job-status endpoint and shows a progress bar (Audiveris recognition steps for PDF,
+  coarse stages for audio).
 
-The web app is a thin layer over the same engine: `pipeline.py` reuses the
-Audiveris launcher detection + invocation and then calls `convert.convert(...)`,
-so CLI and UI behave identically.
+The web app is a thin layer over the same engines: `pipeline.py`/`convert.py` for
+PDF and `audio2midi.py` for audio, so the CLI and UI behave identically.
+
+---
+
+## Audio → MIDI (experimental, the reverse direction)
+
+`audio2midi.py` goes the *other* way — it transcribes a recording (MP3/WAV/FLAC…)
+into MIDI + a notes list, using Spotify's [`basic-pitch`](https://github.com/spotify/basic-pitch)
+(polyphonic) via its **ONNX** backend.
+
+```bash
+# install the audio extras into the same venv (basic-pitch needs --no-deps,
+# see the file header for why)
+.venv/bin/pip install --no-deps basic-pitch
+.venv/bin/pip install -r requirements-audio.txt
+
+.venv/bin/python audio2midi.py "song.mp3" out
+```
+
+It writes, from a single transcription pass:
+
+| File | What it is |
+|------|------------|
+| `out/<name>.full.mid` | every note basic-pitch detects (dense on a full mix) |
+| `out/<name>.melody.mid` | a cleaned, strictly **monophonic** lead line |
+| `out/<name>.notes.csv` / `.txt` | the melody as `start,end,dur,midi,note` |
+
+Useful flags: `--onset-threshold` / `--frame-threshold` (sensitivity), `--min-note-ms`,
+`--min-freq`/`--max-freq`, and melody options `--melody-min`/`--melody-max` (pitch
+range, MIDI numbers) and `--melody-min-ms`.
+
+> **Accuracy caveat.** This is Automatic Music Transcription — ML pitch/onset
+> estimation, not the deterministic note-reading of the PDF path. On a **full band
+> mix** it over-detects (the example, a 4-min promo, yields ~2400 raw notes), and the
+> melody line is a *best-effort* heuristic (most-salient note over time) — a real
+> vocal melody isn't always the loudest/highest pitch. For faithful results, feed it
+> cleaner/solo material, or separate stems first. The engraved-PDF path remains the
+> high-fidelity route.
 
 ---
 
@@ -282,8 +330,10 @@ midiconvert/
 ├── app.py             # Flask web UI server
 ├── templates/         # index.html (the web page)
 ├── static/            # app.js, style.css
+├── audio2midi.py      # reverse direction: audio -> MIDI + notes (basic-pitch)
 ├── setup.sh           # local, no-sudo toolchain installer
 ├── requirements.txt   # music21, mido, flask
+├── requirements-audio.txt  # basic-pitch / onnxruntime / librosa (audio2midi.py)
 ├── tools/             # (created by setup.sh) Audiveris + OCR data — git-ignored
 ├── .venv/             # (created by setup.sh) Python env — git-ignored
 ├── out/               # (CLI) .omr / .mxl / .mid — git-ignored

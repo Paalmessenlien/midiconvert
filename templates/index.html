@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>midiconvert — Sheet music PDF → MIDI</title>
+  <title>midiconvert — PDF / audio → MIDI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <!-- html-midi-player: <midi-player> + <midi-visualizer> (soundfont via CDN) -->
   <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.77,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.5.0"></script>
@@ -11,20 +11,23 @@
 <body>
   <main class="card">
     <h1>midiconvert</h1>
-    <p class="sub">Turn an engraved sheet-music PDF into a playable MIDI file.</p>
+    <p class="sub">Sheet-music <strong>PDF</strong> or an <strong>audio file</strong> → playable MIDI.</p>
 
     <!-- Upload -->
     <section id="upload">
       <label id="drop" for="file" class="dropzone">
-        <input type="file" id="file" accept="application/pdf,.pdf" hidden />
+        <input type="file" id="file" accept="application/pdf,.pdf,audio/*,.mp3,.wav,.flac,.m4a,.ogg" hidden />
         <span class="drop-icon">♪</span>
-        <span class="drop-main">Drop a PDF here, or <u>browse</u></span>
+        <span class="drop-main">Drop a PDF or audio file here, or <u>browse</u></span>
         <span id="filename" class="drop-hint">No file selected</span>
+        <span id="kind-badge" class="badge" hidden></span>
       </label>
 
       <details class="advanced">
         <summary>Advanced options</summary>
-        <div class="opts">
+
+        <!-- PDF (sheet music) options -->
+        <div class="opts" id="adv-pdf" hidden>
           <label>Voice GM program
             <input type="number" id="voice_program" min="0" max="127" value="53" />
           </label>
@@ -43,6 +46,27 @@
             <input type="number" id="eighth_bpm" min="1" step="0.5" placeholder="from score" />
           </label>
         </div>
+
+        <!-- Audio (transcription) options -->
+        <div class="opts" id="adv-audio" hidden>
+          <label>Onset sensitivity <span class="opt">(0–1)</span>
+            <input type="number" id="onset_threshold" min="0" max="1" step="0.05" value="0.5" />
+          </label>
+          <label>Frame sensitivity <span class="opt">(0–1)</span>
+            <input type="number" id="frame_threshold" min="0" max="1" step="0.05" value="0.3" />
+          </label>
+          <label>Melody low <span class="opt">(MIDI)</span>
+            <input type="number" id="melody_min" min="0" max="127" value="55" />
+          </label>
+          <label>Melody high <span class="opt">(MIDI)</span>
+            <input type="number" id="melody_max" min="0" max="127" value="84" />
+          </label>
+          <label>Min melody note <span class="opt">(ms)</span>
+            <input type="number" id="melody_min_ms" min="0" step="10" value="120" />
+          </label>
+        </div>
+
+        <p class="opt" id="adv-hint">Choose a file to see relevant options.</p>
       </details>
 
       <button id="convert" class="primary" disabled>Convert to MIDI</button>
@@ -57,19 +81,16 @@
     <!-- Result -->
     <section id="result" hidden>
       <h2 id="result-title">Done</h2>
+      <div id="player-toggle" class="toggle" hidden></div>
       <midi-player id="player" sound-font visualizer="#viz"></midi-player>
       <div id="readout" class="readout" aria-live="polite">
         <span class="readout-label">Now playing</span>
         <span id="readout-notes" class="readout-notes">—</span>
       </div>
       <midi-visualizer id="viz" type="piano-roll"></midi-visualizer>
-      <div class="downloads">
-        <a id="dl-midi" class="primary" download>Download MIDI</a>
-        <a id="dl-mxl" class="ghost" download>Download MusicXML</a>
-        <button id="again" class="ghost">Convert another</button>
-      </div>
-      <p class="note">Recognition not perfect? The MusicXML is the correction surface —
-        fix it in MuseScore and re-run.</p>
+      <div id="downloads" class="downloads"></div>
+      <button id="again" class="ghost">Convert another</button>
+      <p id="result-note" class="note"></p>
     </section>
 
     <!-- Error -->

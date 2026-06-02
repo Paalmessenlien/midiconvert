@@ -64,6 +64,38 @@ h2 { margin: 0 0 1rem; font-size: 1.15rem; }
 .drop-icon { font-size: 2rem; color: var(--accent); }
 .drop-main u { text-underline-offset: 3px; }
 .drop-hint { color: var(--muted); font-size: 0.9rem; }
+.badge {
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+.badge.pdf { background: rgba(108, 140, 255, 0.15); border-color: var(--accent); }
+.badge.audio { background: rgba(87, 217, 163, 0.15); border-color: var(--accent-2); }
+.badge.bad { background: rgba(255, 107, 107, 0.15); border-color: var(--danger); color: var(--danger); }
+
+/* Player source toggle (Melody / Full) */
+.toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  margin-bottom: 0.6rem;
+  background: #0f1218;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.toggle-btn {
+  padding: 0.35rem 0.9rem;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.toggle-btn.active { background: var(--accent); color: #0b0e15; font-weight: 600; }
 
 /* Advanced */
 .advanced { margin: 1rem 0; }

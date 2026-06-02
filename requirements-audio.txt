@@ -1,0 +1,17 @@
+# Audio -> MIDI (audio2midi.py) dependencies.
+#
+# basic-pitch's metadata force-requires TensorFlow on Linux/Python>=3.11, which has
+# no wheels on newer Pythons. We don't need TF -- the ONNX backend works -- so install
+# basic-pitch WITHOUT its declared deps, then add the real runtime deps below:
+#
+#     pip install --no-deps basic-pitch
+#     pip install -r requirements-audio.txt
+#
+onnxruntime
+librosa
+pretty_midi
+mir_eval
+scikit-learn
+scipy
+resampy
+numpy
