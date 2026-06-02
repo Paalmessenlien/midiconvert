@@ -1,0 +1,204 @@
+:root {
+  --bg: #0f1115;
+  --card: #181b22;
+  --line: #2a2e38;
+  --text: #e7e9ee;
+  --muted: #9aa0ad;
+  --accent: #6c8cff;
+  --accent-2: #57d9a3;
+  --danger: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: radial-gradient(1200px 600px at 50% -10%, #1b2030, var(--bg));
+}
+
+.card {
+  width: min(680px, 100%);
+  min-width: 0;        /* let the card shrink instead of forcing page overflow */
+  margin: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Sections are flex/grid children; without min-width:0 a wide child (the
+   piano-roll) can refuse to shrink and push the whole card off-center. */
+.card > section { min-width: 0; }
+
+h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.02em; }
+h2 { margin: 0 0 1rem; font-size: 1.15rem; }
+.sub { margin: 0.25rem 0 1.5rem; color: var(--muted); }
+
+/* Dropzone */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2.2rem 1rem;
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: center;
+}
+.dropzone:hover, .dropzone.over {
+  border-color: var(--accent);
+  background: rgba(108, 140, 255, 0.06);
+}
+.drop-icon { font-size: 2rem; color: var(--accent); }
+.drop-main u { text-underline-offset: 3px; }
+.drop-hint { color: var(--muted); font-size: 0.9rem; }
+
+/* Advanced */
+.advanced { margin: 1rem 0; }
+.advanced summary { cursor: pointer; color: var(--muted); }
+.opts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  margin-top: 0.85rem;
+}
+.opts label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.opts .opt { font-size: 0.75rem; }
+.opts .check { flex-direction: row; align-items: center; gap: 0.5rem; }
+.opts input[type="number"] {
+  background: #0f1218;
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+}
+
+/* Buttons */
+button, .primary, .ghost {
+  font: inherit;
+  border-radius: 10px;
+  padding: 0.7rem 1.1rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  display: inline-block;
+}
+.primary {
+  width: 100%;
+  background: var(--accent);
+  color: #0b0e15;
+  font-weight: 600;
+  border: none;
+  text-align: center;
+}
+.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+/* Progress */
+.bar {
+  height: 10px;
+  background: #0f1218;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+#bar-fill {
+  height: 100%;
+  width: 2%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 0.4s ease;
+}
+.step { color: var(--muted); margin-top: 0.7rem; font-variant-numeric: tabular-nums; }
+
+/* Result */
+midi-player {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
+  --md-sys-color-primary: var(--accent);
+  --md-sys-color-on-primary: #0b0e15;
+}
+midi-visualizer {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  max-height: 260px;
+  overflow: auto;            /* the wide piano-roll scrolls inside, not the page */
+  background: #0f1218;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+midi-visualizer svg rect.note { fill: var(--accent); }
+.readout {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.6rem;
+  padding: 0.55rem 0.8rem;
+  background: #0f1218;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-height: 2.6rem;
+}
+.readout-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.readout-notes {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--accent-2);
+  letter-spacing: 0.02em;
+}
+
+.downloads {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 1rem 0 0.5rem;
+}
+.downloads .primary { width: auto; }
+.note { color: var(--muted); font-size: 0.85rem; }
+
+/* Error */
+#error-msg {
+  background: #1c1216;
+  border: 1px solid #3a2730;
+  color: var(--danger);
+  padding: 0.9rem;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow: auto;
+  font-size: 0.8rem;
+}

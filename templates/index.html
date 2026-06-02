@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>midiconvert — Sheet music PDF → MIDI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <!-- html-midi-player: <midi-player> + <midi-visualizer> (soundfont via CDN) -->
+  <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.77,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.5.0"></script>
+</head>
+<body>
+  <main class="card">
+    <h1>midiconvert</h1>
+    <p class="sub">Turn an engraved sheet-music PDF into a playable MIDI file.</p>
+
+    <!-- Upload -->
+    <section id="upload">
+      <label id="drop" for="file" class="dropzone">
+        <input type="file" id="file" accept="application/pdf,.pdf" hidden />
+        <span class="drop-icon">♪</span>
+        <span class="drop-main">Drop a PDF here, or <u>browse</u></span>
+        <span id="filename" class="drop-hint">No file selected</span>
+      </label>
+
+      <details class="advanced">
+        <summary>Advanced options</summary>
+        <div class="opts">
+          <label>Voice GM program
+            <input type="number" id="voice_program" min="0" max="127" value="53" />
+          </label>
+          <label>Piano GM program
+            <input type="number" id="piano_program" min="0" max="127" value="0" />
+          </label>
+          <label class="check">
+            <input type="checkbox" id="tempo_fix" checked />
+            Auto-fix compound-meter tempo
+          </label>
+          <label class="check">
+            <input type="checkbox" id="repair_rh" />
+            Repair right-hand eighth-rests
+          </label>
+          <label>Force eighth-note BPM <span class="opt">(optional)</span>
+            <input type="number" id="eighth_bpm" min="1" step="0.5" placeholder="from score" />
+          </label>
+        </div>
+      </details>
+
+      <button id="convert" class="primary" disabled>Convert to MIDI</button>
+    </section>
+
+    <!-- Progress -->
+    <section id="progress" hidden>
+      <div class="bar"><div id="bar-fill"></div></div>
+      <p id="step" class="step">Starting…</p>
+    </section>
+
+    <!-- Result -->
+    <section id="result" hidden>
+      <h2 id="result-title">Done</h2>
+      <midi-player id="player" sound-font visualizer="#viz"></midi-player>
+      <div id="readout" class="readout" aria-live="polite">
+        <span class="readout-label">Now playing</span>
+        <span id="readout-notes" class="readout-notes">—</span>
+      </div>
+      <midi-visualizer id="viz" type="piano-roll"></midi-visualizer>
+      <div class="downloads">
+        <a id="dl-midi" class="primary" download>Download MIDI</a>
+        <a id="dl-mxl" class="ghost" download>Download MusicXML</a>
+        <button id="again" class="ghost">Convert another</button>
+      </div>
+      <p class="note">Recognition not perfect? The MusicXML is the correction surface —
+        fix it in MuseScore and re-run.</p>
+    </section>
+
+    <!-- Error -->
+    <section id="error" hidden>
+      <h2>Conversion failed</h2>
+      <pre id="error-msg"></pre>
+      <button id="retry" class="ghost">Try again</button>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

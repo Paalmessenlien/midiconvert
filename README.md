@@ -113,6 +113,7 @@ If you already have (or have hand-corrected) a `.mxl`/`.xml`/`.musicxml`:
 | `--piano-program N` | `0` | GM program for the **Piano** part(s). `0` = Acoustic Grand. |
 | `--no-tempo-fix` | _(on)_ | Disable the compound-meter tempo correction (see below). |
 | `--eighth-bpm N` | — | Force the eighth-note tempo to `N`, overriding the score. |
+| `--repair-rh` | off | Repair dropped eighth-rests in the compound-meter piano right hand (see [`fix_rh_rests.py`](fix_rh_rests.py)). |
 
 Examples:
 
@@ -126,6 +127,39 @@ Examples:
 # trust the score's tempo exactly, no compound-meter heuristic
 .venv/bin/python convert.py out/score.mxl out/score.mid --no-tempo-fix
 ```
+
+---
+
+## Web UI
+
+A small Flask app gives you a browser interface: drag in a PDF, watch OMR
+progress, then play the result in-page (with a scrolling piano-roll) and download
+the `.mid` / `.mxl`.
+
+```bash
+./setup.sh                       # installs flask too (in requirements.txt)
+.venv/bin/python app.py          # serves on http://127.0.0.1:5000
+```
+
+Open <http://127.0.0.1:5000>, drop a PDF, and convert. An "Advanced options" panel
+exposes the same `convert.py` knobs (voice/piano GM program, tempo-fix, forced
+eighth-note BPM, and **Repair right-hand eighth-rests**). During playback a live
+read-out shows the note names currently sounding, alongside the piano-roll.
+
+Notes:
+- **Local single-user tool** — no auth or upload hardening. It binds to
+  `127.0.0.1` by default; only change the host in `app.py` deliberately.
+- In-browser playback uses the [`html-midi-player`](https://github.com/cifkao/html-midi-player)
+  web component, which loads a soundfont from a CDN — the **first play needs
+  internet**. (That CDN `<script>` is a jsdelivr `combine` bundle, which is why it
+  carries no Subresource-Integrity hash; fine for a local tool, but pin/host it
+  yourself if you deploy this.)
+- OMR is the slow part (~1–2 min); the page polls a job-status endpoint and shows
+  a real progress bar driven by Audiveris' recognition steps.
+
+The web app is a thin layer over the same engine: `pipeline.py` reuses the
+Audiveris launcher detection + invocation and then calls `convert.convert(...)`,
+so CLI and UI behave identically.
 
 ---
 
@@ -197,13 +231,19 @@ fluidsynth -ni -F out/score.wav /path/to/FluidR3_GM.sf2 out/score.mid
 
 ```
 midiconvert/
-├── pdf2midi.sh        # PDF -> MIDI orchestrator (Audiveris + convert.py)
+├── pdf2midi.sh        # PDF -> MIDI orchestrator, CLI (Audiveris + convert.py)
 ├── convert.py         # MusicXML -> MIDI (music21), with the OMR clean-ups
+├── fix_rh_rests.py    # repair dropped eighth-rests in the piano right hand
+├── pipeline.py        # shared engine: Audiveris invocation + convert, with progress
+├── app.py             # Flask web UI server
+├── templates/         # index.html (the web page)
+├── static/            # app.js, style.css
 ├── setup.sh           # local, no-sudo toolchain installer
-├── requirements.txt   # music21, mido
+├── requirements.txt   # music21, mido, flask
 ├── tools/             # (created by setup.sh) Audiveris + OCR data — git-ignored
 ├── .venv/             # (created by setup.sh) Python env — git-ignored
-└── out/               # (created at run time) .omr / .mxl / .mid — git-ignored
+├── out/               # (CLI) .omr / .mxl / .mid — git-ignored
+└── jobs/              # (web UI) per-upload working dirs — git-ignored
 ```
 
 ---

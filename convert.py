@@ -14,6 +14,8 @@ Options:
     --piano-program N   GM program (0-127) for the Piano part(s)     (default 0,  "Acoustic Grand")
     --no-tempo-fix      Disable the compound-meter tempo correction (see below)
     --eighth-bpm N      Force the eighth-note tempo to N (overrides what's in the score)
+    --repair-rh         Repair dropped eighth-rests in the compound-meter piano right
+                        hand (see fix_rh_rests.py)
 """
 from __future__ import annotations
 
@@ -22,6 +24,8 @@ import sys
 from pathlib import Path
 
 from music21 import converter, tempo, meter, instrument, note
+
+import fix_rh_rests
 
 
 # This score is "His Eye Is On The Sparrow": 6/8, dotted-quarter feel, eighth = 105.
@@ -119,8 +123,14 @@ def convert(
     piano_program: int = 0,
     tempo_fix: bool = True,
     eighth_bpm: float | None = None,
+    repair_rh: bool = False,
 ) -> Path:
     score = converter.parse(str(input_path))
+
+    if repair_rh:
+        n = fix_rh_rests.repair(score)
+        print(f"  repaired {n} right-hand measure(s) (eighth-rests)")
+
     ensure_tempo_and_meter(score, FALLBACK_TEMPO_EIGHTH_BPM)
 
     if eighth_bpm is not None:
@@ -145,6 +155,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="disable the compound-meter eighth/quarter tempo correction")
     p.add_argument("--eighth-bpm", type=float, default=None, metavar="N",
                    help="force eighth-note tempo to N (overrides the score's tempo)")
+    p.add_argument("--repair-rh", dest="repair_rh", action="store_true",
+                   help="repair dropped eighth-rests in the compound-meter piano right hand")
     return p.parse_args(argv[1:])
 
 
@@ -161,6 +173,7 @@ def main(argv: list[str]) -> int:
         piano_program=args.piano_program,
         tempo_fix=args.tempo_fix,
         eighth_bpm=args.eighth_bpm,
+        repair_rh=args.repair_rh,
     )
     print(f"wrote {output_path}")
     return 0

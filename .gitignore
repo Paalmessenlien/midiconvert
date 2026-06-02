@@ -4,6 +4,7 @@ tools/
 
 # Generated artifacts
 out/
+jobs/
 
 # Inputs you may not want to commit
 *.pdf
